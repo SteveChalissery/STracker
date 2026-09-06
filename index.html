@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b1020">
+  <title>Student Money Tracker</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">A$</div>
+        <div>
+          <strong>MoneyTrack</strong>
+          <span>Student dashboard</span>
+        </div>
+      </div>
+
+      <nav>
+        <button class="nav-item active" data-section="dashboard"><span>◈</span> Dashboard</button>
+        <button class="nav-item" data-section="earnings"><span>↗</span> Earnings</button>
+        <button class="nav-item" data-section="expenses"><span>↘</span> Expenses</button>
+        <button class="nav-item" data-section="hours"><span>◷</span> Work limit</button>
+        <button class="nav-item" data-section="reports"><span>▥</span> Reports</button>
+        <button class="nav-item" data-section="settings"><span>⚙</span> Settings</button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="privacy-pill">● Local-only data</div>
+        <small>Your entries are saved in this browser.</small>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">PERSONAL FINANCE</p>
+          <h1 id="pageTitle">Dashboard</h1>
+        </div>
+        <div class="top-actions">
+          <button class="ghost-btn" id="exportBtn">Export backup</button>
+          <label class="ghost-btn file-btn">Import backup<input id="importInput" type="file" accept=".json"></label>
+          <button class="primary-btn" data-open-modal="earningsModal">+ Add entry</button>
+        </div>
+      </header>
+
+      <section id="dashboard" class="page-section active">
+        <div class="hero">
+          <div>
+            <span class="hero-label">CURRENT MONEY</span>
+            <div class="hero-value" id="heroBalance">A$0.00</div>
+            <p class="muted">Starting balance + earnings − expenses − reserved tax</p>
+          </div>
+          <div class="hero-side">
+            <div class="mini-stat">
+              <span>This month</span>
+              <strong id="monthNet">A$0.00</strong>
+            </div>
+            <div class="mini-stat">
+              <span>Tax reserve</span>
+              <strong id="taxReserve">A$0.00</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="cards four">
+          <article class="stat-card income-card">
+            <div class="stat-icon">↗</div>
+            <div><span>Total earnings</span><strong id="totalEarnings">A$0.00</strong><small id="earningCount">0 entries</small></div>
+          </article>
+          <article class="stat-card expense-card">
+            <div class="stat-icon">↘</div>
+            <div><span>Total expenses</span><strong id="totalExpenses">A$0.00</strong><small id="expenseCount">0 entries</small></div>
+          </article>
+          <article class="stat-card hours-card">
+            <div class="stat-icon">◷</div>
+            <div><span>Current fortnight</span><strong id="fortnightHours">0.0 / 48h</strong><small id="hoursStatus">Plenty of room</small></div>
+          </article>
+          <article class="stat-card net-card">
+            <div class="stat-icon">◆</div>
+            <div><span>Net after reserve</span><strong id="netMoney">A$0.00</strong><small id="avgDaily">A$0.00/day average</small></div>
+          </article>
+        </div>
+
+        <div class="grid two">
+          <article class="panel chart-panel">
+            <div class="panel-head"><div><h2>Earnings trend</h2><p>Daily gross earnings</p></div><span class="legend-dot green"></span></div>
+            <canvas id="earningsChart"></canvas>
+          </article>
+          <article class="panel chart-panel">
+            <div class="panel-head"><div><h2>Spending trend</h2><p>Daily expenses</p></div><span class="legend-dot red"></span></div>
+            <canvas id="expensesChart"></canvas>
+          </article>
+        </div>
+
+        <div class="grid two">
+          <article class="panel">
+            <div class="panel-head"><div><h2>Recent activity</h2><p>Latest earnings and expenses</p></div><button class="text-btn" data-section-jump="reports">View all</button></div>
+            <div id="recentActivity" class="activity-list"></div>
+          </article>
+          <article class="panel">
+            <div class="panel-head"><div><h2>Work-limit safety</h2><p>Fortnight starts Monday</p></div><span id="safetyBadge" class="badge good">SAFE</span></div>
+            <div class="limit-meter"><div id="limitFill"></div></div>
+            <div class="limit-numbers"><strong id="limitUsed">0h</strong><span id="limitRemaining">48h remaining</span></div>
+            <p id="limitMessage" class="muted">You are comfortably below your 48-hour fortnight limit.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="earnings" class="page-section">
+        <div class="section-head">
+          <div><h2>Earnings</h2><p>Track Uber Eats now and add any future job or platform.</p></div>
+          <button class="primary-btn" data-open-modal="earningsModal">+ Add earnings</button>
+        </div>
+        <div class="cards three">
+          <article class="stat-card income-card"><span>Gross earnings</span><strong id="earningsGrossSection">A$0.00</strong></article>
+          <article class="stat-card"><span>Reserved for tax</span><strong id="earningsTaxSection">A$0.00</strong></article>
+          <article class="stat-card net-card"><span>After tax reserve</span><strong id="earningsNetSection">A$0.00</strong></article>
+        </div>
+        <div class="panel table-panel">
+          <div class="panel-head"><div><h2>All earnings</h2><p>Edit or correct anything later.</p></div></div>
+          <div class="table-wrap"><table><thead><tr><th>Date</th><th>Job</th><th>Hours</th><th>Gross</th><th>Tax reserve</th><th>After reserve</th><th></th></tr></thead><tbody id="earningsTable"></tbody></table></div>
+        </div>
+      </section>
+
+      <section id="expenses" class="page-section">
+        <div class="section-head">
+          <div><h2>Expenses</h2><p>Record everyday spending and business-related costs separately.</p></div>
+          <button class="danger-btn" data-open-modal="expenseModal">+ Add expense</button>
+        </div>
+        <div class="cards three">
+          <article class="stat-card expense-card"><span>Total spending</span><strong id="expensesTotalSection">A$0.00</strong></article>
+          <article class="stat-card"><span>This month</span><strong id="expensesMonthSection">A$0.00</strong></article>
+          <article class="stat-card"><span>Average per day</span><strong id="expensesAvgSection">A$0.00</strong></article>
+        </div>
+        <div class="grid two">
+          <article class="panel chart-panel"><div class="panel-head"><div><h2>Expense categories</h2><p>Where your money goes</p></div></div><canvas id="categoryChart"></canvas></article>
+          <article class="panel chart-panel"><div class="panel-head"><div><h2>Daily spending</h2><p>Last 30 days</p></div></div><canvas id="expenseDailyChart"></canvas></article>
+        </div>
+        <div class="panel table-panel">
+          <div class="panel-head"><div><h2>All expenses</h2><p>Edit or delete previous entries whenever needed.</p></div></div>
+          <div class="table-wrap"><table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Deductible?</th><th></th></tr></thead><tbody id="expensesTable"></tbody></table></div>
+        </div>
+      </section>
+
+      <section id="hours" class="page-section">
+        <div class="section-head">
+          <div><h2>Work-limit monitor</h2><p>Australian Student visa tracker — 48 hours per fortnight.</p></div>
+          <span class="badge info">48 HOURS / FORTNIGHT</span>
+        </div>
+        <div class="limit-hero panel">
+          <div class="limit-big"><span>Current Monday–Sunday fortnight</span><strong id="hoursBig">0.0h</strong><small id="hoursRange"></small></div>
+          <div class="limit-ring" id="limitRing"><div><strong id="ringPercent">0%</strong><span>used</span></div></div>
+        </div>
+        <div class="grid two">
+          <article class="panel">
+            <div class="panel-head"><div><h2>Hours by job</h2><p>Current fortnight</p></div></div>
+            <div id="jobHoursList" class="bar-list"></div>
+          </article>
+          <article class="panel">
+            <div class="panel-head"><div><h2>Safety rules</h2><p>Built into the dashboard</p></div></div>
+            <ul class="check-list">
+              <li>Fortnights run from Monday for 14 days.</li>
+              <li>All jobs are combined toward the same tracker.</li>
+              <li>The dashboard warns you at 80% and blocks accidental over-limit additions.</li>
+              <li>Always verify your actual visa conditions in VEVO/Home Affairs.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section id="reports" class="page-section">
+        <div class="section-head"><div><h2>Reports</h2><p>See your financial picture over time.</p></div></div>
+        <div class="grid two">
+          <article class="panel chart-panel"><div class="panel-head"><div><h2>Income vs expenses</h2><p>Last 30 days</p></div></div><canvas id="cashflowChart"></canvas></article>
+          <article class="panel chart-panel"><div class="panel-head"><div><h2>Monthly net</h2><p>Gross earnings minus expenses and tax reserve</p></div></div><canvas id="monthlyChart"></canvas></article>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div><h2>Financial snapshot</h2><p>Calculated from your saved entries.</p></div></div>
+          <div class="snapshot-grid">
+            <div><span>Starting balance</span><strong id="reportStarting">A$0.00</strong></div>
+            <div><span>Gross earnings</span><strong id="reportGross">A$0.00</strong></div>
+            <div><span>Tax reserve</span><strong id="reportTax">A$0.00</strong></div>
+            <div><span>Expenses</span><strong id="reportExpenses">A$0.00</strong></div>
+            <div><span>Current money</span><strong id="reportBalance">A$0.00</strong></div>
+            <div><span>Total hours</span><strong id="reportHours">0.0h</strong></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="settings" class="page-section">
+        <div class="section-head"><div><h2>Settings</h2><p>Make the tracker fit your situation.</p></div></div>
+        <div class="grid two">
+          <article class="panel">
+            <div class="panel-head"><div><h2>Money settings</h2><p>These values affect dashboard calculations.</p></div></div>
+            <form id="settingsForm" class="form-grid">
+              <label>Starting balance (A$)<input id="startingBalance" type="number" step="0.01" min="0"></label>
+              <label>Tax reserve rate (%)<input id="taxRate" type="number" step="0.1" min="0" max="100"></label>
+              <label>Work limit per fortnight (hours)<input id="workLimit" type="number" step="0.5" min="0"></label>
+              <div class="form-actions"><button class="primary-btn" type="submit">Save settings</button></div>
+            </form>
+            <p class="note">The default tax reserve is 15% as a budgeting buffer, not a statement of your actual tax liability. Your actual Australian tax outcome depends on your circumstances and deductible business expenses.</p>
+          </article>
+          <article class="panel">
+            <div class="panel-head"><div><h2>Data management</h2><p>Your entries are stored locally in this browser.</p></div></div>
+            <div class="data-actions">
+              <button class="ghost-btn" id="exportBtn2">Export JSON backup</button>
+              <label class="ghost-btn file-btn">Import JSON backup<input id="importInput2" type="file" accept=".json"></label>
+              <button class="danger-outline" id="clearBtn">Delete all data</button>
+            </div>
+            <p class="note">Export a backup regularly. GitHub stores the website code, not your browser's localStorage entries.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="earningsModal">
+    <div class="modal">
+      <button class="modal-close" data-close-modal>×</button>
+      <h2 id="earningModalTitle">Add earnings</h2>
+      <p class="muted">Record one work session or a day's work.</p>
+      <form id="earningForm" class="form-grid">
+        <input type="hidden" id="earningId">
+        <label>Date<input id="earningDate" type="date" required></label>
+        <label>Job / platform<input id="earningJob" list="jobNames" placeholder="e.g. Uber Eats" required></label>
+        <datalist id="jobNames"><option>Uber Eats</option><option>DoorDash</option><option>Warehouse</option><option>Construction</option><option>Trade Assistant</option><option>Other</option></datalist>
+        <label>Hours worked<input id="earningHours" type="number" step="0.25" min="0" required></label>
+        <label>Gross earnings (A$)<input id="earningAmount" type="number" step="0.01" min="0" required></label>
+        <label>Notes<textarea id="earningNotes" rows="3" placeholder="Optional: peak shift, quest, tips, etc."></textarea></label>
+        <div class="calculation-box"><span>Tax reserve</span><strong id="modalTaxPreview">A$0.00</strong><small>Uses your configured reserve rate.</small></div>
+        <div class="form-actions"><button type="button" class="ghost-btn" data-close-modal>Cancel</button><button class="primary-btn" type="submit">Save earnings</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="expenseModal">
+    <div class="modal">
+      <button class="modal-close" data-close-modal>×</button>
+      <h2 id="expenseModalTitle">Add expense</h2>
+      <p class="muted">Keep your everyday spending and business costs visible.</p>
+      <form id="expenseForm" class="form-grid">
+        <input type="hidden" id="expenseId">
+        <label>Date<input id="expenseDate" type="date" required></label>
+        <label>Category<select id="expenseCategory"><option>Food & groceries</option><option>Transport</option><option>Rent & bills</option><option>Phone & internet</option><option>Study</option><option>Entertainment</option><option>Shopping</option><option>Uber Eats / delivery costs</option><option>Other</option></select></label>
+        <label>Description<input id="expenseDescription" placeholder="e.g. Aldi groceries" required></label>
+        <label>Amount (A$)<input id="expenseAmount" type="number" step="0.01" min="0" required></label>
+        <label class="check-field"><input id="expenseDeductible" type="checkbox"> Potentially work-related / deductible</label>
+        <label>Notes<textarea id="expenseNotes" rows="3" placeholder="Optional"></textarea></label>
+        <div class="form-actions"><button type="button" class="ghost-btn" data-close-modal>Cancel</button><button class="danger-btn" type="submit">Save expense</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
